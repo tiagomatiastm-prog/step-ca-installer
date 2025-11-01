@@ -61,10 +61,11 @@ STEP_CA_VERSION="0.28.4"  # Version de step-ca
 STEP_USER="step"
 STEP_GROUP="step"
 STEP_HOME="/etc/step-ca"
-STEP_CONFIG_DIR="${STEP_HOME}/config"
-STEP_SECRETS_DIR="${STEP_HOME}/secrets"
-STEP_CERTS_DIR="${STEP_HOME}/certs"
-STEP_DB_DIR="${STEP_HOME}/db"
+STEP_AUTH_DIR="${STEP_HOME}/authorities/default"
+STEP_CONFIG_DIR="${STEP_AUTH_DIR}/config"
+STEP_SECRETS_DIR="${STEP_AUTH_DIR}/secrets"
+STEP_CERTS_DIR="${STEP_AUTH_DIR}/certs"
+STEP_DB_DIR="${STEP_AUTH_DIR}/db"
 CA_PORT="9000"
 
 # Générer un mot de passe sécurisé pour la CA
@@ -129,9 +130,10 @@ if ! id "$STEP_USER" &>/dev/null; then
     useradd --system --home "$STEP_HOME" --shell /bin/false "$STEP_USER"
 fi
 
-# Créer les répertoires nécessaires
-print_message "Création des répertoires..."
-mkdir -p "$STEP_CONFIG_DIR" "$STEP_SECRETS_DIR" "$STEP_CERTS_DIR" "$STEP_DB_DIR"
+# Créer le répertoire de base (step ca init créera le reste)
+print_message "Création du répertoire de base..."
+mkdir -p "$STEP_HOME"
+chown $STEP_USER:$STEP_GROUP "$STEP_HOME"
 
 # Initialiser la CA
 print_message "Initialisation de l'autorité de certification..."
@@ -158,7 +160,7 @@ rm -f /tmp/ca_password.txt
 print_message "Configuration des permissions..."
 chown -R ${STEP_USER}:${STEP_GROUP} "$STEP_HOME"
 chmod 700 "$STEP_SECRETS_DIR"
-chmod 600 "$STEP_SECRETS_DIR"/*
+find "$STEP_SECRETS_DIR" -type f -exec chmod 600 {} \;
 
 # Créer le service systemd
 print_message "Création du service systemd..."
