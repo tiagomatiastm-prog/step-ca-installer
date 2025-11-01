@@ -54,11 +54,26 @@ CA_DNS_NAME=ca.exemple.com curl -fsSL https://raw.githubusercontent.com/tiagomat
 
 # Installation avec nom de domaine et email personnalisés
 CA_DNS_NAME=ca.exemple.com ADMIN_EMAIL=admin@exemple.com curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash
+
+# Installation derrière un reverse proxy (bind sur localhost)
+BEHIND_REVERSE_PROXY=true CA_DNS_NAME=ca.exemple.com curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash
 ```
 
 **Variables d'environnement disponibles** :
 - `CA_DNS_NAME` : Nom de domaine de la CA (défaut: `ca.local`)
 - `ADMIN_EMAIL` : Email de l'administrateur (défaut: `admin@${CA_DNS_NAME}`)
+- `BEHIND_REVERSE_PROXY` : Mode reverse proxy - `true` pour bind sur localhost (défaut: `false`)
+- `BIND_ADDRESS` : Adresse d'écoute (défaut: `0.0.0.0` ou `127.0.0.1` si reverse proxy)
+- `CA_PORT` : Port d'écoute (défaut: `9000`)
+
+## Reverse Proxy
+
+step-ca peut fonctionner derrière un reverse proxy (Nginx, Caddy, Traefik, HAProxy) pour :
+- Centraliser la gestion SSL/TLS
+- Ajouter du load balancing
+- Améliorer la sécurité
+
+Consultez le guide [REVERSE_PROXY.md](REVERSE_PROXY.md) pour des exemples de configuration détaillés.
 
 ## Déploiement avec Ansible
 

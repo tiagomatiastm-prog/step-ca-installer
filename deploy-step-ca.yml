@@ -8,13 +8,16 @@
     step_user: "step"
     step_group: "step"
     step_home: "/etc/step-ca"
-    step_config_dir: "{{ step_home }}/config"
-    step_secrets_dir: "{{ step_home }}/secrets"
-    step_certs_dir: "{{ step_home }}/certs"
-    step_db_dir: "{{ step_home }}/db"
+    step_auth_dir: "{{ step_home }}/authorities/default"
+    step_config_dir: "{{ step_auth_dir }}/config"
+    step_secrets_dir: "{{ step_auth_dir }}/secrets"
+    step_certs_dir: "{{ step_auth_dir }}/certs"
+    step_db_dir: "{{ step_auth_dir }}/db"
     ca_port: "9000"
     ca_dns_name: "ca.local"
     admin_email: "admin@{{ ca_dns_name }}"
+    behind_reverse_proxy: false
+    bind_address: "{{ '127.0.0.1' if behind_reverse_proxy else '0.0.0.0' }}"
 
   tasks:
     - name: Vérifier que le système est Debian
@@ -143,7 +146,7 @@
         step ca init
         --name="Step CA"
         --dns="{{ ca_dns_name }}"
-        --address=":{{ ca_port }}"
+        --address="{{ bind_address }}:{{ ca_port }}"
         --provisioner="{{ admin_email }}"
         --password-file=/tmp/ca_password.txt
         --provisioner-password-file=/tmp/ca_password.txt

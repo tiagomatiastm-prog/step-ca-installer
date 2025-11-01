@@ -75,13 +75,26 @@ PROVISIONER_PASSWORD=$(openssl rand -base64 32)
 # Configuration via variables d'environnement ou valeurs par défaut
 # Vous pouvez définir ces variables avant d'exécuter le script :
 # CA_DNS_NAME=ca.exemple.com ADMIN_EMAIL=admin@exemple.com ./install-step-ca.sh
+# BEHIND_REVERSE_PROXY=true BIND_ADDRESS=127.0.0.1 ./install-step-ca.sh
 CA_DNS_NAME="${CA_DNS_NAME:-ca.local}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@${CA_DNS_NAME}}"
+
+# Configuration reverse proxy
+BEHIND_REVERSE_PROXY="${BEHIND_REVERSE_PROXY:-false}"
+if [ "$BEHIND_REVERSE_PROXY" = "true" ]; then
+    BIND_ADDRESS="${BIND_ADDRESS:-127.0.0.1}"
+else
+    BIND_ADDRESS="${BIND_ADDRESS:-0.0.0.0}"
+fi
 
 print_message "Configuration :"
 print_message "  - Nom de domaine CA : $CA_DNS_NAME"
 print_message "  - Email admin : $ADMIN_EMAIL"
 print_message "  - Port API : $CA_PORT"
+print_message "  - Adresse d'écoute : $BIND_ADDRESS:$CA_PORT"
+if [ "$BEHIND_REVERSE_PROXY" = "true" ]; then
+    print_message "  - Mode reverse proxy : ACTIVÉ"
+fi
 
 # Mise à jour du système
 print_message "Mise à jour du système..."
@@ -146,7 +159,7 @@ echo "$CA_PASSWORD" > /tmp/ca_password.txt
 step ca init \
     --name="Step CA" \
     --dns="$CA_DNS_NAME" \
-    --address=":${CA_PORT}" \
+    --address="${BIND_ADDRESS}:${CA_PORT}" \
     --provisioner="admin@${CA_DNS_NAME}" \
     --password-file=/tmp/ca_password.txt \
     --provisioner-password-file=/tmp/ca_password.txt \
