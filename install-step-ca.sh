@@ -28,6 +28,84 @@ print_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
+# Fonction d'aide
+show_help() {
+    cat << EOF
+Usage: $0 [OPTIONS]
+
+Installation automatisée de step-ca (Autorité de Certification) sur Debian 13
+
+OPTIONS:
+    --ca-dns <nom>          Nom de domaine de la CA (ex: ca.exemple.com)
+    --email <email>         Email de l'administrateur
+    --reverse-proxy         Activer le mode reverse proxy (bind sur 127.0.0.1)
+    --bind-address <addr>   Adresse d'écoute (défaut: 0.0.0.0 ou 127.0.0.1 si reverse-proxy)
+    --port <port>           Port de la CA (défaut: 9000)
+    -h, --help              Afficher ce message d'aide
+
+EXEMPLES:
+    # Installation simple
+    sudo $0
+
+    # Installation avec configuration personnalisée
+    sudo $0 --ca-dns ca.exemple.com --email admin@exemple.com
+
+    # Installation derrière un reverse proxy
+    sudo $0 --ca-dns ca.exemple.com --email admin@exemple.com --reverse-proxy
+
+    # Installation via curl avec arguments
+    curl -fsSL <url> | sudo bash -s -- --ca-dns ca.exemple.com --email admin@exemple.com --reverse-proxy
+
+VARIABLES D'ENVIRONNEMENT (alternative):
+    CA_DNS_NAME             Nom de domaine de la CA
+    ADMIN_EMAIL             Email de l'administrateur
+    BEHIND_REVERSE_PROXY    true/false pour activer le mode reverse proxy
+    BIND_ADDRESS            Adresse d'écoute
+    CA_PORT                 Port de la CA
+
+EOF
+    exit 0
+}
+
+# Parser les arguments
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --ca-dns)
+                CA_DNS_NAME="$2"
+                shift 2
+                ;;
+            --email)
+                ADMIN_EMAIL="$2"
+                shift 2
+                ;;
+            --reverse-proxy)
+                BEHIND_REVERSE_PROXY="true"
+                shift
+                ;;
+            --bind-address)
+                BIND_ADDRESS="$2"
+                shift 2
+                ;;
+            --port)
+                CA_PORT="$2"
+                shift 2
+                ;;
+            -h|--help)
+                show_help
+                ;;
+            *)
+                print_error "Option inconnue: $1"
+                echo "Utilisez --help pour voir les options disponibles"
+                exit 1
+                ;;
+        esac
+    done
+}
+
+# Parser les arguments avant tout
+parse_args "$@"
+
 # Vérifier que le script est exécuté en tant que root
 if [[ $EUID -ne 0 ]]; then
    print_error "Ce script doit être exécuté en tant que root (sudo)"
@@ -66,21 +144,28 @@ STEP_CONFIG_DIR="${STEP_AUTH_DIR}/config"
 STEP_SECRETS_DIR="${STEP_AUTH_DIR}/secrets"
 STEP_CERTS_DIR="${STEP_AUTH_DIR}/certs"
 STEP_DB_DIR="${STEP_AUTH_DIR}/db"
-CA_PORT="9000"
 
 # Générer un mot de passe sécurisé pour la CA
 CA_PASSWORD=$(openssl rand -base64 32)
 PROVISIONER_PASSWORD=$(openssl rand -base64 32)
 
-# Configuration via variables d'environnement ou valeurs par défaut
-# Vous pouvez définir ces variables avant d'exécuter le script :
-# CA_DNS_NAME=ca.exemple.com ADMIN_EMAIL=admin@exemple.com ./install-step-ca.sh
-# BEHIND_REVERSE_PROXY=true BIND_ADDRESS=127.0.0.1 ./install-step-ca.sh
+# Configuration via arguments CLI (priorité), variables d'environnement, ou valeurs par défaut
+# Les arguments CLI ont déjà été parsés et ont défini les variables si fournis
+# Sinon on utilise les variables d'environnement ou les valeurs par défaut
+
+# Port de la CA (arguments CLI > env > défaut)
+CA_PORT="${CA_PORT:-${CA_PORT_ENV:-9000}}"
+
+# Nom de domaine CA (arguments CLI > env > défaut)
 CA_DNS_NAME="${CA_DNS_NAME:-ca.local}"
+
+# Email admin (arguments CLI > env > défaut basé sur CA_DNS_NAME)
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@${CA_DNS_NAME}}"
 
-# Configuration reverse proxy
+# Configuration reverse proxy (arguments CLI > env > défaut)
 BEHIND_REVERSE_PROXY="${BEHIND_REVERSE_PROXY:-false}"
+
+# Adresse d'écoute (arguments CLI > env > défaut basé sur reverse proxy)
 if [ "$BEHIND_REVERSE_PROXY" = "true" ]; then
     BIND_ADDRESS="${BIND_ADDRESS:-127.0.0.1}"
 else

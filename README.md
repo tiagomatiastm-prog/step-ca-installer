@@ -46,17 +46,56 @@ sudo ./install-step-ca.sh
 
 ### Méthode 3 : Installation avec configuration personnalisée
 
-Vous pouvez personnaliser l'installation en définissant des variables d'environnement :
+#### A. Avec arguments CLI (recommandée)
 
 ```bash
 # Installation avec nom de domaine personnalisé
-CA_DNS_NAME=ca.exemple.com curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com
 
 # Installation avec nom de domaine et email personnalisés
-CA_DNS_NAME=ca.exemple.com ADMIN_EMAIL=admin@exemple.com curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com --email admin@exemple.com
 
 # Installation derrière un reverse proxy (bind sur localhost)
-BEHIND_REVERSE_PROXY=true CA_DNS_NAME=ca.exemple.com curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com --email admin@exemple.com --reverse-proxy
+
+# Installation complète avec tous les paramètres
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com --email admin@exemple.com --reverse-proxy --bind-address 127.0.0.1 --port 9000
+```
+
+**Arguments disponibles** :
+- `--ca-dns <nom>` : Nom de domaine de la CA (ex: ca.exemple.com)
+- `--email <email>` : Email de l'administrateur
+- `--reverse-proxy` : Activer le mode reverse proxy (bind sur 127.0.0.1)
+- `--bind-address <addr>` : Adresse d'écoute (défaut: 0.0.0.0 ou 127.0.0.1 si reverse-proxy)
+- `--port <port>` : Port de la CA (défaut: 9000)
+- `-h, --help` : Afficher l'aide
+
+#### B. Avec script téléchargé localement
+
+```bash
+# Télécharger le script
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh -o install-step-ca.sh
+chmod +x install-step-ca.sh
+
+# Exécuter avec arguments
+sudo ./install-step-ca.sh --ca-dns ca.exemple.com --email admin@exemple.com --reverse-proxy
+
+# Ou afficher l'aide
+sudo ./install-step-ca.sh --help
+```
+
+#### C. Avec variables d'environnement (alternative)
+
+⚠️ **Note** : Avec `sudo bash`, les variables d'environnement ne sont pas transmises automatiquement.
+
+```bash
+# Télécharger puis exécuter avec sudo -E (préserve les variables)
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh -o /tmp/install-step-ca.sh
+chmod +x /tmp/install-step-ca.sh
+BEHIND_REVERSE_PROXY=true CA_DNS_NAME=ca.exemple.com ADMIN_EMAIL=admin@exemple.com sudo -E /tmp/install-step-ca.sh
+
+# Ou passer les variables directement à sudo
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo CA_DNS_NAME=ca.exemple.com ADMIN_EMAIL=admin@exemple.com bash
 ```
 
 **Variables d'environnement disponibles** :
@@ -65,6 +104,11 @@ BEHIND_REVERSE_PROXY=true CA_DNS_NAME=ca.exemple.com curl -fsSL https://raw.gith
 - `BEHIND_REVERSE_PROXY` : Mode reverse proxy - `true` pour bind sur localhost (défaut: `false`)
 - `BIND_ADDRESS` : Adresse d'écoute (défaut: `0.0.0.0` ou `127.0.0.1` si reverse proxy)
 - `CA_PORT` : Port d'écoute (défaut: `9000`)
+
+**Ordre de priorité de la configuration** :
+1. Arguments CLI (priorité la plus haute)
+2. Variables d'environnement
+3. Valeurs par défaut
 
 ## Reverse Proxy
 

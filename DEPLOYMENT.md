@@ -109,6 +109,18 @@ ansible-playbook -i inventory.ini deploy-step-ca.yml --limit ca-prod
 
 Vous pouvez surcharger les variables par défaut de plusieurs façons :
 
+### Variables disponibles
+
+| Variable | Description | Défaut |
+|----------|-------------|--------|
+| `ca_dns_name` | Nom de domaine de la CA | `ca.local` |
+| `admin_email` | Email de l'administrateur | `admin@{{ ca_dns_name }}` |
+| `ca_port` | Port d'écoute de la CA | `9000` |
+| `behind_reverse_proxy` | Mode reverse proxy (true/false) | `false` |
+| `bind_address` | Adresse d'écoute | `0.0.0.0` ou `127.0.0.1` si reverse proxy |
+| `step_version` | Version de step CLI | `0.28.7` |
+| `step_ca_version` | Version de step-ca | `0.28.4` |
+
 ### Dans l'inventaire
 
 ```ini
@@ -116,16 +128,34 @@ Vous pouvez surcharger les variables par défaut de plusieurs façons :
 ca_dns_name=ca.exemple.com
 admin_email=admin@exemple.com
 ca_port=9000
-step_version=0.27.5
-step_ca_version=0.27.5
+behind_reverse_proxy=false
+step_version=0.28.7
+step_ca_version=0.28.4
+```
+
+**Exemple avec reverse proxy** :
+```ini
+[step_ca_servers:vars]
+ca_dns_name=ca.exemple.com
+admin_email=admin@exemple.com
+behind_reverse_proxy=true
+bind_address=127.0.0.1
 ```
 
 ### En ligne de commande
 
 ```bash
+# Configuration de base
 ansible-playbook -i inventory.ini deploy-step-ca.yml \
   -e "ca_dns_name=ca.exemple.com" \
   -e "admin_email=admin@exemple.com"
+
+# Avec reverse proxy
+ansible-playbook -i inventory.ini deploy-step-ca.yml \
+  -e "ca_dns_name=ca.exemple.com" \
+  -e "admin_email=admin@exemple.com" \
+  -e "behind_reverse_proxy=true" \
+  -e "bind_address=127.0.0.1"
 ```
 
 ### Dans un fichier de variables
@@ -136,8 +166,21 @@ Créez un fichier `vars.yml` :
 ca_dns_name: ca.exemple.com
 admin_email: admin@exemple.com
 ca_port: 9000
-step_version: 0.27.5
-step_ca_version: 0.27.5
+behind_reverse_proxy: false
+bind_address: 0.0.0.0
+step_version: 0.28.7
+step_ca_version: 0.28.4
+```
+
+**Exemple avec reverse proxy** (`vars-reverse-proxy.yml`) :
+```yaml
+ca_dns_name: ca.exemple.com
+admin_email: admin@exemple.com
+ca_port: 9000
+behind_reverse_proxy: true
+bind_address: 127.0.0.1
+step_version: 0.28.7
+step_ca_version: 0.28.4
 ```
 
 Utilisez-le lors du déploiement :
