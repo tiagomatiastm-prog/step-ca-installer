@@ -3,8 +3,8 @@
   hosts: step_ca_servers
   become: yes
   vars:
-    step_version: "0.27.5"
-    step_ca_version: "0.27.5"
+    step_version: "0.28.7"
+    step_ca_version: "0.28.4"
     step_user: "step"
     step_group: "step"
     step_home: "/etc/step-ca"
@@ -45,24 +45,24 @@
 
     - name: Télécharger step CLI
       get_url:
-        url: "https://dl.smallstep.com/gh-release/cli/gh-release/v{{ step_version }}/step-cli_{{ step_version }}_amd64.deb"
-        dest: "/tmp/step-cli_{{ step_version }}_amd64.deb"
+        url: "https://github.com/smallstep/cli/releases/download/v{{ step_version }}/step-cli_{{ step_version }}-1_amd64.deb"
+        dest: "/tmp/step-cli_{{ step_version }}-1_amd64.deb"
         mode: '0644'
 
     - name: Installer step CLI
       apt:
-        deb: "/tmp/step-cli_{{ step_version }}_amd64.deb"
+        deb: "/tmp/step-cli_{{ step_version }}-1_amd64.deb"
         state: present
 
     - name: Télécharger step-ca
       get_url:
-        url: "https://dl.smallstep.com/gh-release/certificates/gh-release/v{{ step_ca_version }}/step-ca_{{ step_ca_version }}_amd64.deb"
-        dest: "/tmp/step-ca_{{ step_ca_version }}_amd64.deb"
+        url: "https://github.com/smallstep/certificates/releases/download/v{{ step_ca_version }}/step-ca_{{ step_ca_version }}-1_amd64.deb"
+        dest: "/tmp/step-ca_{{ step_ca_version }}-1_amd64.deb"
         mode: '0644'
 
     - name: Installer step-ca
       apt:
-        deb: "/tmp/step-ca_{{ step_ca_version }}_amd64.deb"
+        deb: "/tmp/step-ca_{{ step_ca_version }}-1_amd64.deb"
         state: present
 
     - name: Nettoyer les fichiers .deb téléchargés
@@ -70,8 +70,8 @@
         path: "{{ item }}"
         state: absent
       loop:
-        - "/tmp/step-cli_{{ step_version }}_amd64.deb"
-        - "/tmp/step-ca_{{ step_ca_version }}_amd64.deb"
+        - "/tmp/step-cli_{{ step_version }}-1_amd64.deb"
+        - "/tmp/step-ca_{{ step_ca_version }}-1_amd64.deb"
 
     - name: Vérifier l'installation de step CLI
       command: step version

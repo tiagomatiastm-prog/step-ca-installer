@@ -56,8 +56,8 @@ fi
 print_message "Utilisateur détecté : $REAL_USER"
 
 # Variables de configuration
-STEP_VERSION="0.27.5"  # Version de step CLI
-STEP_CA_VERSION="0.27.5"  # Version de step-ca
+STEP_VERSION="0.28.7"  # Version de step CLI
+STEP_CA_VERSION="0.28.4"  # Version de step-ca
 STEP_USER="step"
 STEP_GROUP="step"
 STEP_HOME="/etc/step-ca"
@@ -92,8 +92,13 @@ apt-get install -y -qq wget curl jq
 
 # Téléchargement et installation de step CLI
 print_message "Téléchargement de step CLI v${STEP_VERSION}..."
-STEP_CLI_DEB="step-cli_${STEP_VERSION}_amd64.deb"
-wget -q "https://dl.smallstep.com/gh-release/cli/gh-release/v${STEP_VERSION}/${STEP_CLI_DEB}" -O "/tmp/${STEP_CLI_DEB}"
+STEP_CLI_DEB="step-cli_${STEP_VERSION}-1_amd64.deb"
+wget -q "https://github.com/smallstep/cli/releases/download/v${STEP_VERSION}/${STEP_CLI_DEB}" -O "/tmp/${STEP_CLI_DEB}"
+
+if [ ! -s "/tmp/${STEP_CLI_DEB}" ]; then
+    print_error "Échec du téléchargement de step CLI"
+    exit 1
+fi
 
 print_message "Installation de step CLI..."
 dpkg -i "/tmp/${STEP_CLI_DEB}"
@@ -101,8 +106,13 @@ rm -f "/tmp/${STEP_CLI_DEB}"
 
 # Téléchargement et installation de step-ca
 print_message "Téléchargement de step-ca v${STEP_CA_VERSION}..."
-STEP_CA_DEB="step-ca_${STEP_CA_VERSION}_amd64.deb"
-wget -q "https://dl.smallstep.com/gh-release/certificates/gh-release/v${STEP_CA_VERSION}/${STEP_CA_DEB}" -O "/tmp/${STEP_CA_DEB}"
+STEP_CA_DEB="step-ca_${STEP_CA_VERSION}-1_amd64.deb"
+wget -q "https://github.com/smallstep/certificates/releases/download/v${STEP_CA_VERSION}/${STEP_CA_DEB}" -O "/tmp/${STEP_CA_DEB}"
+
+if [ ! -s "/tmp/${STEP_CA_DEB}" ]; then
+    print_error "Échec du téléchargement de step-ca"
+    exit 1
+fi
 
 print_message "Installation de step-ca..."
 dpkg -i "/tmp/${STEP_CA_DEB}"
