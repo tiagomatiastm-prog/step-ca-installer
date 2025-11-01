@@ -44,6 +44,22 @@ chmod +x install-step-ca.sh
 sudo ./install-step-ca.sh
 ```
 
+### Méthode 3 : Installation avec configuration personnalisée
+
+Vous pouvez personnaliser l'installation en définissant des variables d'environnement :
+
+```bash
+# Installation avec nom de domaine personnalisé
+CA_DNS_NAME=ca.exemple.com curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash
+
+# Installation avec nom de domaine et email personnalisés
+CA_DNS_NAME=ca.exemple.com ADMIN_EMAIL=admin@exemple.com curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash
+```
+
+**Variables d'environnement disponibles** :
+- `CA_DNS_NAME` : Nom de domaine de la CA (défaut: `ca.local`)
+- `ADMIN_EMAIL` : Email de l'administrateur (défaut: `admin@${CA_DNS_NAME}`)
+
 ## Déploiement avec Ansible
 
 Pour déployer step-ca sur plusieurs serveurs avec Ansible, consultez le guide [DEPLOYMENT.md](DEPLOYMENT.md).

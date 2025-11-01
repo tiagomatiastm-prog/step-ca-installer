@@ -71,13 +71,11 @@ CA_PORT="9000"
 CA_PASSWORD=$(openssl rand -base64 32)
 PROVISIONER_PASSWORD=$(openssl rand -base64 32)
 
-# Demander le nom de domaine pour la CA
-read -p "Entrez le nom de domaine pour votre CA (ex: ca.exemple.com) [ca.local]: " CA_DNS_NAME
-CA_DNS_NAME=${CA_DNS_NAME:-ca.local}
-
-# Demander l'email de l'administrateur
-read -p "Entrez l'email de l'administrateur [admin@${CA_DNS_NAME}]: " ADMIN_EMAIL
-ADMIN_EMAIL=${ADMIN_EMAIL:-admin@${CA_DNS_NAME}}
+# Configuration via variables d'environnement ou valeurs par défaut
+# Vous pouvez définir ces variables avant d'exécuter le script :
+# CA_DNS_NAME=ca.exemple.com ADMIN_EMAIL=admin@exemple.com ./install-step-ca.sh
+CA_DNS_NAME="${CA_DNS_NAME:-ca.local}"
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@${CA_DNS_NAME}}"
 
 print_message "Configuration :"
 print_message "  - Nom de domaine CA : $CA_DNS_NAME"
