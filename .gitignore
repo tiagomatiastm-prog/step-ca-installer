@@ -1,0 +1,29 @@
+# Fichiers de secrets et credentials
+*-info.txt
+*credentials*
+*.key
+*.pem
+password.txt
+
+# Fichiers temporaires
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+
+# Ansible
+*.retry
+.ansible/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Backup files
+*.bak
+*.backup

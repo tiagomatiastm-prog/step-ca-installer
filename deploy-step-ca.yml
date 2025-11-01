@@ -1,0 +1,256 @@
+---
+- name: Deploy step-ca Certificate Authority
+  hosts: step_ca_servers
+  become: yes
+  vars:
+    step_version: "0.27.5"
+    step_ca_version: "0.27.5"
+    step_user: "step"
+    step_group: "step"
+    step_home: "/etc/step-ca"
+    step_config_dir: "{{ step_home }}/config"
+    step_secrets_dir: "{{ step_home }}/secrets"
+    step_certs_dir: "{{ step_home }}/certs"
+    step_db_dir: "{{ step_home }}/db"
+    ca_port: "9000"
+    ca_dns_name: "ca.local"
+    admin_email: "admin@{{ ca_dns_name }}"
+
+  tasks:
+    - name: Vérifier que le système est Debian
+      fail:
+        msg: "Ce playbook nécessite Debian"
+      when: ansible_distribution != "Debian"
+
+    - name: Afficher les informations du système
+      debug:
+        msg: "Déploiement sur {{ ansible_hostname }} - {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+    - name: Mise à jour du cache APT
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Installation des dépendances
+      apt:
+        name:
+          - wget
+          - curl
+          - jq
+        state: present
+
+    - name: Générer un mot de passe sécurisé pour la CA
+      set_fact:
+        ca_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+
+    - name: Télécharger step CLI
+      get_url:
+        url: "https://dl.smallstep.com/gh-release/cli/gh-release/v{{ step_version }}/step-cli_{{ step_version }}_amd64.deb"
+        dest: "/tmp/step-cli_{{ step_version }}_amd64.deb"
+        mode: '0644'
+
+    - name: Installer step CLI
+      apt:
+        deb: "/tmp/step-cli_{{ step_version }}_amd64.deb"
+        state: present
+
+    - name: Télécharger step-ca
+      get_url:
+        url: "https://dl.smallstep.com/gh-release/certificates/gh-release/v{{ step_ca_version }}/step-ca_{{ step_ca_version }}_amd64.deb"
+        dest: "/tmp/step-ca_{{ step_ca_version }}_amd64.deb"
+        mode: '0644'
+
+    - name: Installer step-ca
+      apt:
+        deb: "/tmp/step-ca_{{ step_ca_version }}_amd64.deb"
+        state: present
+
+    - name: Nettoyer les fichiers .deb téléchargés
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/step-cli_{{ step_version }}_amd64.deb"
+        - "/tmp/step-ca_{{ step_ca_version }}_amd64.deb"
+
+    - name: Vérifier l'installation de step CLI
+      command: step version
+      register: step_cli_version
+      changed_when: false
+
+    - name: Vérifier l'installation de step-ca
+      command: step-ca version
+      register: step_ca_version_check
+      changed_when: false
+
+    - name: Afficher les versions installées
+      debug:
+        msg:
+          - "{{ step_cli_version.stdout }}"
+          - "{{ step_ca_version_check.stdout }}"
+
+    - name: Créer le groupe step
+      group:
+        name: "{{ step_group }}"
+        system: yes
+        state: present
+
+    - name: Créer l'utilisateur step
+      user:
+        name: "{{ step_user }}"
+        group: "{{ step_group }}"
+        system: yes
+        home: "{{ step_home }}"
+        shell: /bin/false
+        create_home: no
+        state: present
+
+    - name: Créer les répertoires step-ca
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ step_user }}"
+        group: "{{ step_group }}"
+        mode: '0755'
+      loop:
+        - "{{ step_home }}"
+        - "{{ step_config_dir }}"
+        - "{{ step_certs_dir }}"
+        - "{{ step_db_dir }}"
+
+    - name: Créer le répertoire secrets avec permissions restrictives
+      file:
+        path: "{{ step_secrets_dir }}"
+        state: directory
+        owner: "{{ step_user }}"
+        group: "{{ step_group }}"
+        mode: '0700'
+
+    - name: Vérifier si la CA est déjà initialisée
+      stat:
+        path: "{{ step_config_dir }}/ca.json"
+      register: ca_config
+
+    - name: Créer le fichier de mot de passe temporaire
+      copy:
+        content: "{{ ca_password }}"
+        dest: "/tmp/ca_password.txt"
+        mode: '0600'
+      when: not ca_config.stat.exists
+
+    - name: Initialiser step-ca
+      command: >
+        step ca init
+        --name="Step CA"
+        --dns="{{ ca_dns_name }}"
+        --address=":{{ ca_port }}"
+        --provisioner="{{ admin_email }}"
+        --password-file=/tmp/ca_password.txt
+        --provisioner-password-file=/tmp/ca_password.txt
+        --deployment-type=standalone
+        --context=default
+      environment:
+        STEPPATH: "{{ step_home }}"
+      when: not ca_config.stat.exists
+      become_user: "{{ step_user }}"
+
+    - name: Nettoyer le fichier de mot de passe temporaire
+      file:
+        path: "/tmp/ca_password.txt"
+        state: absent
+
+    - name: Créer le fichier de mot de passe pour le service
+      copy:
+        content: "{{ ca_password }}"
+        dest: "{{ step_secrets_dir }}/password.txt"
+        owner: "{{ step_user }}"
+        group: "{{ step_group }}"
+        mode: '0600'
+
+    - name: Configurer les permissions des secrets
+      file:
+        path: "{{ step_secrets_dir }}"
+        state: directory
+        owner: "{{ step_user }}"
+        group: "{{ step_group }}"
+        mode: '0700'
+        recurse: yes
+
+    - name: Créer le service systemd step-ca
+      template:
+        src: templates/step-ca.service.j2
+        dest: /etc/systemd/system/step-ca.service
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - Reload systemd
+        - Restart step-ca
+
+    - name: Activer le service step-ca
+      systemd:
+        name: step-ca
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: Attendre que le service démarre
+      wait_for:
+        port: "{{ ca_port }}"
+        delay: 2
+        timeout: 30
+
+    - name: Vérifier l'état du service step-ca
+      systemd:
+        name: step-ca
+      register: step_ca_service
+
+    - name: Afficher l'état du service
+      debug:
+        msg: "Service step-ca est {{ step_ca_service.status.ActiveState }}"
+
+    - name: Tester la connexion à la CA
+      command: step ca health
+      environment:
+        STEPPATH: "{{ step_home }}"
+      register: ca_health
+      failed_when: false
+      changed_when: false
+
+    - name: Afficher le résultat du health check
+      debug:
+        msg: "{{ ca_health.stdout if ca_health.rc == 0 else 'CA not ready yet (may need a few more seconds)' }}"
+
+    - name: Créer le fichier d'informations
+      template:
+        src: templates/step-ca-info.txt.j2
+        dest: "{{ ansible_env.HOME }}/step-ca-info.txt"
+        owner: "{{ ansible_user_id }}"
+        mode: '0600'
+
+    - name: Afficher les informations de connexion
+      debug:
+        msg:
+          - "====================================================="
+          - "  Installation de step-ca terminée avec succès !"
+          - "====================================================="
+          - ""
+          - "URL CA         : https://{{ ca_dns_name }}:{{ ca_port }}"
+          - "Email admin    : {{ admin_email }}"
+          - "Mot de passe   : (voir ~/step-ca-info.txt)"
+          - ""
+          - "Fichier d'informations : ~/step-ca-info.txt"
+          - ""
+          - "Pour tester : step ca health"
+          - ""
+          - "====================================================="
+
+  handlers:
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Restart step-ca
+      systemd:
+        name: step-ca
+        state: restarted

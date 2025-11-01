@@ -1,0 +1,27 @@
+[Unit]
+Description=step-ca Certificate Authority
+After=network-online.target
+Wants=network-online.target
+Documentation=https://smallstep.com/docs/step-ca
+
+[Service]
+Type=simple
+User={{ step_user }}
+Group={{ step_group }}
+Environment="STEPPATH={{ step_home }}"
+ExecStart=/usr/bin/step-ca {{ step_config_dir }}/ca.json --password-file={{ step_secrets_dir }}/password.txt
+Restart=on-failure
+RestartSec=10
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ step_home }}
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target

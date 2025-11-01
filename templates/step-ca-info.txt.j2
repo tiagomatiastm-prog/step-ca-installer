@@ -1,0 +1,72 @@
+========================================
+  Informations step-ca
+========================================
+
+Installation terminée le : {{ ansible_date_time.iso8601 }}
+Serveur : {{ ansible_hostname }}
+
+INFORMATIONS DE CONNEXION
+-------------------------
+URL de la CA       : https://{{ ca_dns_name }}:{{ ca_port }}
+Email admin        : {{ admin_email }}
+Mot de passe CA    : {{ ca_password }}
+
+API ENDPOINTS
+-------------
+Health Check       : https://{{ ca_dns_name }}:{{ ca_port }}/health
+ACME Directory     : https://{{ ca_dns_name }}:{{ ca_port }}/acme/acme/directory
+Provisioners       : https://{{ ca_dns_name }}:{{ ca_port }}/provisioners
+
+FICHIERS DE CONFIGURATION
+-------------------------
+Config Directory   : {{ step_config_dir }}
+CA Config          : {{ step_config_dir }}/ca.json
+Secrets Directory  : {{ step_secrets_dir }}
+Certificates Dir   : {{ step_certs_dir }}
+Database Directory : {{ step_db_dir }}
+
+Root Certificate   : {{ step_certs_dir }}/root_ca.crt
+Intermediate Cert  : {{ step_certs_dir }}/intermediate_ca.crt
+
+COMMANDES UTILES
+----------------
+# Vérifier l'état de la CA
+step ca health
+
+# Lister les provisioners
+step ca provisioner list
+
+# Obtenir un certificat
+step ca certificate <nom-domaine> <cert.crt> <cert.key>
+
+# Renouveler un certificat
+step ca renew <cert.crt> <cert.key>
+
+# Révoquer un certificat
+step ca revoke <serial-number>
+
+# Bootstrap step CLI (première utilisation)
+step ca bootstrap --ca-url https://{{ ca_dns_name }}:{{ ca_port }} --fingerprint $(step certificate fingerprint {{ step_certs_dir }}/root_ca.crt)
+
+GESTION DU SERVICE
+------------------
+Démarrer    : sudo systemctl start step-ca
+Arrêter     : sudo systemctl stop step-ca
+Redémarrer  : sudo systemctl restart step-ca
+Statut      : sudo systemctl status step-ca
+Logs        : sudo journalctl -u step-ca -f
+
+SÉCURITÉ
+--------
+- Le mot de passe de la CA est stocké dans : {{ step_secrets_dir }}/password.txt
+- Conservez ce fichier en lieu sûr
+- Permissions restrictives appliquées sur les clés privées (600)
+- Service s'exécute avec l'utilisateur dédié : {{ step_user }}
+
+DOCUMENTATION
+-------------
+Site officiel      : https://smallstep.com/docs/step-ca
+GitHub             : https://github.com/smallstep/certificates
+Documentation ACME : https://smallstep.com/docs/step-ca/acme-basics
+
+========================================
