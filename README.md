@@ -28,14 +28,14 @@ Ce projet permet d'installer et configurer automatiquement **step-ca**, une auto
 ### Méthode 1 : Installation en une ligne (recommandée)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/master/install-step-ca.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash
 ```
 
 ### Méthode 2 : Installation manuelle
 
 ```bash
 # Télécharger le script
-wget https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/master/install-step-ca.sh
+wget https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh
 
 # Rendre le script exécutable
 chmod +x install-step-ca.sh
@@ -50,16 +50,16 @@ sudo ./install-step-ca.sh
 
 ```bash
 # Installation avec nom de domaine personnalisé
-curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/master/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com
 
 # Installation avec nom de domaine et email personnalisés
-curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/master/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com --email admin@exemple.com
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com --email admin@exemple.com
 
 # Installation derrière un reverse proxy (bind sur localhost)
-curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/master/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com --email admin@exemple.com --reverse-proxy
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com --email admin@exemple.com --reverse-proxy
 
 # Installation complète avec tous les paramètres
-curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/master/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com --email admin@exemple.com --reverse-proxy --bind-address 127.0.0.1 --port 9000
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo bash -s -- --ca-dns ca.exemple.com --email admin@exemple.com --reverse-proxy --bind-address 127.0.0.1 --port 9000
 ```
 
 **Arguments disponibles** :
@@ -74,7 +74,7 @@ curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installe
 
 ```bash
 # Télécharger le script
-curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/master/install-step-ca.sh -o install-step-ca.sh
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh -o install-step-ca.sh
 chmod +x install-step-ca.sh
 
 # Exécuter avec arguments
@@ -90,12 +90,12 @@ sudo ./install-step-ca.sh --help
 
 ```bash
 # Télécharger puis exécuter avec sudo -E (préserve les variables)
-curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/master/install-step-ca.sh -o /tmp/install-step-ca.sh
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh -o /tmp/install-step-ca.sh
 chmod +x /tmp/install-step-ca.sh
 BEHIND_REVERSE_PROXY=true CA_DNS_NAME=ca.exemple.com ADMIN_EMAIL=admin@exemple.com sudo -E /tmp/install-step-ca.sh
 
 # Ou passer les variables directement à sudo
-curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/master/install-step-ca.sh | sudo CA_DNS_NAME=ca.exemple.com ADMIN_EMAIL=admin@exemple.com bash
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/step-ca-installer/main/install-step-ca.sh | sudo CA_DNS_NAME=ca.exemple.com ADMIN_EMAIL=admin@exemple.com bash
 ```
 
 **Variables d'environnement disponibles** :
